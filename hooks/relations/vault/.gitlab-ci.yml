@@ -1,0 +1,9 @@
+image: iceyec/ci-charms
+
+stages:
+  - lint
+
+lint:
+  stage: lint
+  script:
+    - flake8 .
