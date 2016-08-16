@@ -9,14 +9,12 @@ description: |
 tags:
 - security
 provides:
-  consul:
+  consul-agent:
     interface: consul-agent
   vault:
     interface: vault
 series:
   - xenial
-  - trusty
 maintainers:
 - Chris Holcombe <xfactor973@gmail.com>
 - Chris MacNaughton <chris.macnaughton@canonical.com>
-repo: https://github.com/jamesbeedy/charm-vault.git

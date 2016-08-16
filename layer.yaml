@@ -1,14 +1,7 @@
-"options":
-  "vault": {}
-  "leadership": {}
-  "basic":
-    "use_venv": !!bool "false"
-    "packages": []
-    "include_system_packages": !!bool "false"
-"includes":
-- "layer:basic"
-- "layer:basic"
-- "layer:leadership"
-- "interface:consul"
-- "interface:vault"
-"is": "vault"
+includes:
+- layer:basic
+- layer:basic
+- layer:leadership
+- interface:consul-agent
+- interface:vault
+repo: git@github.com:jamesbeedy/charm-vault.git

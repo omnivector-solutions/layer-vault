@@ -1,0 +1,6 @@
+[Unit]
+Description=Vault
+
+[Service]
+Type=simple
+ExecStart={{vault_path}} server {{vault_options}}

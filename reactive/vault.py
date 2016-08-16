@@ -17,12 +17,12 @@ import charms.leadership
 import hvac
 
 
-@when('consul.connected')
+@when('consul-agent.connected')
 @when_not('vault.ready')
 def setup_vault(consul):
     render(
         source='config.hcl',
-        target='/etc/vault/config.hcl',
+        target='/etc/config.hcl',
         context={
             'private_address': hookenv.unit_get('private-address')
         }
@@ -82,14 +82,15 @@ def unlock():
         client.unseal(leader_get('key'))
 
 
-def setup_upstart_jobs():
-    hookenv.log('setting up upstart jobs')
+def setup_systemd_jobs():
+    hookenv.log('setting up systemd jobs')
     context = {
         'vault_path': '/usr/local/bin/vault',
         'name': 'vault',
-        'vault_options': '--config=/etc/vault/config.hcl'
+        'vault_options': '--config=/etc/config.hcl'
     }
-    render('upstart.conf', '/etc/init/vault.conf', context, perms=0o644)
+    render('vault.service.tmpl', '/etc/systemd/system/vault.service',
+           context, owner="root", perms=0o644)
     service_stop('vault')
 
 
@@ -103,10 +104,10 @@ def stop():
 def install():
     hookenv.log('Installing vault')
     shutil.copyfile(
-        '{}/files/vault-0.5.0'.format(hookenv.charm_dir()),
+        '{}/files/vault-0.6.0'.format(hookenv.charm_dir()),
         '/tmp/vault')
     mkdir('/usr/local/bin')
     shutil.move('/tmp/vault', '/usr/local/bin/vault')
     os.chmod('/usr/local/bin/vault', 0o755)
-    setup_upstart_jobs()
+    setup_systemd_jobs()
     hookenv.open_port(8200)
