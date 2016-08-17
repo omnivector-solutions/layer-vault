@@ -34,52 +34,52 @@ def setup_vault(consul):
 @when('vault.ready', 'leadership.is_leader')
 @when_not('leadership.set.root_token')
 def vault_ready():
-    # client = hvac.Client()
-    client = hvac.Client(url='http://localhost:8200')
-    try:
-        if not client.is_initialized():
-            shares = 1
-            threshold = 1
-
-            result = client.initialize(shares, threshold)
-            client.token = result['root_token']
-            client.unseal(result['keys'][0])
-            charms.leadership.leader_set(
-                root_token=result['root_token'],
-                key=result['keys'][0])
-    except:
-        hookenv.log(
-            "Had a problem with Vault initialization, will try again soon")
+    if hookenv.is_leader():
+        client = hvac.Client(url='http://localhost:8200')
+        try:
+            if not client.is_initialized():
+                shares = 1
+                threshold = 1
+    
+                result = client.initialize(shares, threshold)
+                client.token = result['root_token']
+                client.unseal(result['keys'][0])
+                charms.leadership.leader_set(
+                    root_token=result['root_token'],
+                    key=result['keys'][0])
+        except:
+            hookenv.log(
+                "Had a problem with Vault initialization, will try again soon")
 
 
 @when('vault.token.requested', 'leadership.set.root_token')
 def generate_tokens(vault):
-    # client = hvac.Client()
-    client = hvac.Client(url='http://localhost:8200')
-    client.token = leader_get('root_token')
-    for service, token in vault.requested_tokens():
-        if token:
-            client.create_token(
-                id=token, policies=['root'], display_name=service)
-        else:
-            token = client.create_token(
-                policies=['root'], display_name=service
-                )['auth']['client_token']
-
-        vault.provide_token(
-            service=service,
-            host=hookenv.unit_private_ip(),
-            port=8200,
-            token=token
-        )
+    if hookenv.is_leader():
+        client = hvac.Client(url='http://localhost:8200')
+        client.token = leader_get('root_token')
+        for service, token in vault.requested_tokens():
+            if token:
+                client.create_token(
+                    id=token, policies=['root'], display_name=service)
+            else:
+                token = client.create_token(
+                    policies=['root'], display_name=service
+                    )['auth']['client_token']
+    
+            vault.provide_token(
+                service=service,
+                host=hookenv.unit_private_ip(),
+                port=8200,
+                token=token
+            )
 
 
 @when('leadership.set')
 def unlock():
-    # client = hvac.Client()
-    client = hvac.Client(url='http://localhost:8200')
-    if client.is_sealed():
-        client.unseal(leader_get('key'))
+    if hookenv.is_leader():
+        client = hvac.Client(url='http://localhost:8200')
+        if client.is_sealed():
+            client.unseal(leader_get('key'))
 
 
 def setup_systemd_jobs():
